@@ -17,18 +17,9 @@ Rails.application.configure do
   # Enable server timing
   config.server_timing = true
 
-  # Enable/disable caching. By default caching is disabled.
-  # Run rails dev:cache to toggle caching.
-  if Rails.root.join("tmp/caching-dev.txt").exist?
-    config.cache_store = :memory_store
-    config.public_file_server.headers = {
-      "Cache-Control" => "public, max-age=#{2.days.to_i}"
-    }
-  else
-    config.action_controller.perform_caching = false
-
-    config.cache_store = :null_store
-  end
+  # Use in-process memory store so Rails.cache is functional without any external dependencies.
+  # 64MB is well above the ~1.8KB needed for 36 pricing keys; leaves ample headroom.
+  config.cache_store = :memory_store, { size: 64.megabytes }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
