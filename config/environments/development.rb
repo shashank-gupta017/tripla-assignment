@@ -18,8 +18,8 @@ Rails.application.configure do
   config.server_timing = true
 
   # Use in-process memory store so Rails.cache is functional without any external dependencies.
-  # 64MB is well above the ~1.8KB needed for 36 pricing keys; leaves ample headroom.
-  config.cache_store = :memory_store, { size: 64.megabytes }
+  # MemoryStore defaults to 32MB default cache size, which is well above the ~1.8KB needed for 36 pricing keys; leaves ample headroom.
+  config.cache_store = :memory_store
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
