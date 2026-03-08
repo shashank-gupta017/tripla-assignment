@@ -10,7 +10,7 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
 
     mock_response = OpenStruct.new(success?: true, body: mock_body)
 
-    RateApiClient.stub(:get_rate, mock_response) do
+    RateApiClient.stub(:get_rates, mock_response) do
       get api_v1_pricing_url, params: {
         period: "Summer",
         hotel: "FloatingPointResort",
@@ -28,7 +28,7 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
   test "should return error when rate API fails" do
     mock_response = OpenStruct.new(success?: false, body: { 'error' => 'Rate not found' })
 
-    RateApiClient.stub(:get_rate, mock_response) do
+    RateApiClient.stub(:get_rates, mock_response) do
       get api_v1_pricing_url, params: {
         period: "Summer",
         hotel: "FloatingPointResort",

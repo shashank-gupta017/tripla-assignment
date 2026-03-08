@@ -8,7 +8,7 @@ module Api::V1
 
     def run
       # TODO: Start to implement here
-      rate = RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
+      rate = RateApiClient.get_rates(attributes: [{ period: @period, hotel: @hotel, room: @room }])
       if rate.success?
         parsed_rate = JSON.parse(rate.body)
         @result = parsed_rate['rates'].detect { |r| r['period'] == @period && r['hotel'] == @hotel && r['room'] == @room }&.dig('rate')
