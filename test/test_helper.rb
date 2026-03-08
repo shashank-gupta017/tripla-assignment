@@ -10,5 +10,8 @@ class ActiveSupport::TestCase
   # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
   fixtures :all
 
-  # Add more helper methods to be used by all tests here...
+  # Clear the cache before each test to prevent state leaking between tests.
+  setup do
+    Rails.cache.clear
+  end
 end
