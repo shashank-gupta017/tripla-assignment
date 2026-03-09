@@ -12,6 +12,17 @@ ENV RAILS_ENV="development" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT=""
 
+# Optional: inject a corporate CA certificate at build time to allow apk and
+# bundler to reach HTTPS endpoints through a corporate proxy (e.g. Zscaler).
+# Usage: docker compose build --build-arg CORPORATE_CA_CERT="$(cat your-cert.cer)"
+# Leave unset for normal environments — the RUN step is a no-op when empty.
+ARG CORPORATE_CA_CERT=""
+RUN if [ -n "$CORPORATE_CA_CERT" ]; then \
+      echo "$CORPORATE_CA_CERT" > /usr/local/share/ca-certificates/corporate-ca.crt && \
+      apk add --no-cache ca-certificates && \
+      update-ca-certificates; \
+    fi
+
 # Install packages needed for development
 RUN apk add --no-cache \
     build-base \

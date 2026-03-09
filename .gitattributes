@@ -1,5 +1,14 @@
 # See https://git-scm.com/docs/gitattributes for more about git attribute files.
 
+
+# This is a classic Windows/Docker compatibility problem—the fix would be ensuring proper line endings through `.gitattributes`, 
+# configuring git to not auto-convert line endings, or running a conversion tool inside the container.
+
+# Ensure Unix line endings (LF) for shell scripts and bin/ files so they execute
+# correctly inside Linux Docker containers when the repo is cloned on Windows.
+* text=auto eol=lf
+bin/* text eol=lf
+
 # Mark the database schema as having been generated.
 db/schema.rb linguist-generated
 
