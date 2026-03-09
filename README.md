@@ -57,6 +57,14 @@ The provided `Dockerfile` builds a container with all necessary dependencies. Yo
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose)
 - No local Ruby installation required — everything runs inside the container
 
+
+## Implementation Summary
+
+- Uses `Rails.cache` with a 5-minute TTL to keep rates fresh while avoiding unnecessary upstream calls
+- On any cache miss, fetches **all 36** valid `(period, hotel, room)` combinations in **one** batch call and warms the full cache
+- Bounds upstream usage to **288 calls/day** (`24 * 60 / 5`), which stays well within the **1,000 calls/day** token limit while serving **10,000+ user requests/day**
+- Handles failure modes explicitly: **400** invalid input, **503** timeout, **429** upstream rate-limit, **502** upstream error, **404** missing rate, **500** unexpected error
+
 ### Quick Start Guide
 
 List of common commands for building, running, and interacting with the Dockerized environment.
@@ -88,6 +96,45 @@ docker compose exec interview-dev ./bin/rails test test/controllers/pricing_cont
 
 # --- 7. Stop the containers ---
 docker compose down
+```
+
+### Verification
+
+#### Verify cache miss -> batch warm -> cache hit
+
+Open one terminal and follow the app and upstream logs:
+
+```bash
+docker compose logs -f interview-dev rate-api
+```
+
+In a second terminal, run the same request twice:
+
+```bash
+curl 'http://localhost:3000/api/v1/pricing?period=Summer&hotel=FloatingPointResort&room=SingletonRoom'
+curl 'http://localhost:3000/api/v1/pricing?period=Summer&hotel=FloatingPointResort&room=SingletonRoom'
+```
+
+Expected evidence:
+
+- `interview-dev` logs show a cache miss on the first request:
+  - `[PricingService] Cache MISS for pricing/Summer/FloatingPointResort/SingletonRoom — warming all 36 keys`
+- `interview-dev` logs show the batch warm completed:
+  - `[PricingService] Cache warmed: 36 keys written ...`
+- `interview-dev` logs show a cache hit on the second request:
+  - `[PricingService] Cache HIT for pricing/Summer/FloatingPointResort/SingletonRoom`
+- `rate-api` logs show only **one** `POST /pricing` for the two identical requests before TTL expiry
+
+#### Verify automated tests
+
+```bash
+docker compose exec interview-dev ./bin/rails test
+```
+
+Expected output:
+
+```text
+15 runs, 37 assertions, 0 failures, 0 errors, 0 skips
 ```
 
 
@@ -193,4 +240,3 @@ This solution was developed with GitHub Copilot CLI as an AI assistant. Copilot 
 - **README**: update the README file.
 
 All generated code was reviewed, understood, and verified by running the full test suite and manual curl tests. Every design decision documented above reflects a genuine understanding of the trade-offs involved.
-
